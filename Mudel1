@@ -1,0 +1,24 @@
+##IMPORTANT! The data was analysed in R Markdown file not Python and therefore contains different syntax.
+
+---
+title: "RMKData"
+author: "Sander Jegorov"
+date: "2026-04-24"
+output: html_document
+
+## Introduction
+
+This is an introduction to the analysis of youth migration from Estonia, specifically focusing on the period of 2015-2024 in the context of Harju maakond and age groups of 7-16 and 17-26. The dataset is small and very focused, with emphasis on trying to see the probability of youths from different age groups migrating from Harjumaa.
+
+The dataset was taken from the Statistics Estonia website: https://andmed.stat.ee/et/stat/eri-valdkondade-statistika__noorteseire/NH03, where only a small part of the actual data input was used to observe a specific problem.
+
+The problem is relatively simple and will be focusing on conditional probability, where probability "P" is dependent on "A" and "B" age group and therefore the notation is following P(A|B).
+
+```{r}
+#Reading in the document 
+
+Data <- read.csv(file = "NoorteValjaranne.csv")
+
+
+```
+
