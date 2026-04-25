@@ -8,17 +8,26 @@ output: html_document
 
 ## Introduction
 
-This is an introduction to the analysis of youth migration from Estonia, specifically focusing on the period of 2015-2024 in the context of Harju maakond and age groups of 7-16 and 17-26. The dataset is small and very focused, with emphasis on trying to see the probability of youths from different age groups migrating from Harjumaa.
+This is an introduction to the analysis of first registration of personal vehicles from Estonia, specifically focusing on the year 2026 in the context of most popular car brands. The dataset is composed of car brands from different manufacturers (BMW,...,Ford) and a number of registrations (1,...,254) corresponding to a year of manufacture (2006,...,2026).
 
-The dataset was taken from the Statistics Estonia website: https://andmed.stat.ee/et/stat/eri-valdkondade-statistika__noorteseire/NH03, where only a small part of the actual data input was used to observe a specific problem.
+The dataset was taken from the Statistics Estonia website: https://andmed.eesti.ee/datasets/infoleht-%28esmaste-ja-uute-soidukite-statistika%29, where only one sheet of a larger dataset was used to observe a specific proble and older vehicles were disincluded.
 
-The problem is relatively simple and will be focusing on conditional probability, where probability "P" is dependent on "A" and "B" age group and therefore the notation is following P(A|B).
+The problem is "How many vehicles are first registered from a period of 20 years and how probable it is to choose a certain car brand. In this study we'll be focusing on conditional probability, where probability "P" is dependent on "A" age and "B" year and car brand, therefore the notation is following P(A|B). For the probability model we're trying to do we're using the following equation: P(A|B)=P(B|A)P(A)/P(B), which states that "Probability of age group is dependent on B the year and the migration count that is 
+
+We'll be using a binomial model he theory behind the model will be the following: We'll be choosing Y as a 
 
 ```{r}
 #Reading in the document 
 
-Data <- read.csv(file = "NoorteValjaranne.csv")
+Data <- read.csv(file = "Soidukid.csv")
 
+#Creating the base for modelling
+
+
+
+#Plotting
+
+plot()
 
 ```
 
