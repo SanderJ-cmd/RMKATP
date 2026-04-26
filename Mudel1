@@ -1,4 +1,3 @@
----
 title: "RMKData"
 author: "Sander Jegorov"
 date: "2026-04-24"
@@ -12,7 +11,6 @@ The dataset was taken from the Statistics Estonia website: https://andmed.eesti.
 
 The problem is "How many vehicles are first registered from a period of 20 years and how probable it is to choose to register a certain car brand. In this study we'll be focusing on conditional probability, where probability "P" is dependent on "A" brand given "B" year, therefore the notation is following P(A|B). For the probability model we're trying to do we're using the following equation: P(A|B)=P(A∩B)/P(B), which states that "Probability of brand is dependent on B the year of manufacture." To do this for each year separately would be tedius and require a lot of time so therefore we start with firstly taking all of the registered cars together and making a table with different brands.
 
-
 ```{r}
 #Reading in the document 
 
@@ -22,6 +20,9 @@ Data <- read.csv(file = "Soidukid.csv")
 
 library(tidyr)
 library(dplyr)
+library(ggplot2)
+
+#Creating a modified dataset with extending the rows by removing the multiple year columns and transforming them into one column with repetitions of years with pivot_longer. Mutate is used to transform the year into a numeric line of data.
 
 Data_long <- Data %>%
   pivot_longer(
@@ -33,33 +34,40 @@ Data_long <- Data %>%
     Year = as.numeric(gsub("X", "", Year))
   )
 
-```
-
+#Probabilities are calculated with P(A)=Number of times A occurs/Number of total outcomes. This means in this context e.g for year 2026 the first registration of BMW P(A)=71/286 P(A)=0.248 where 71 is the count and 286 the sum in the mutate line
+    
 Data_year_prob <- Data_long %>%
   group_by(Year) %>%
   mutate(Prob = Count / sum(Count, na.rm = TRUE))
 
-Data_brand_prob <- Data_long %>%
-  group_by(Mark) %>%
-  mutate(Prob = Count / sum(Count, na.rm = TRUE))
+#Plotting the first data with the probability of first registration over the years 2006-2026.This kind of regular xy time series plot doesn't really feel appropriate in this kind of context but still some trends can already be recognized regarding which brand is most commonly registered in each year.
 
-
-library(ggplot2)
-  ggplot(Data_brand_prob, aes(x = Year, y = Prob, color = Mark)) +
+  ggplot(Data_year_prob, aes(x = Year, y = Prob, color = Mark)) +
   geom_line() +
+  theme_minimal() +
   geom_point() +
   labs(
-    title = "Brand Share Over Time",
+    title = "First Registration Probability Over Time",
     x = "Year",
-    y = "P(Brand | Year)"
+    y = "P(Brand | Year)" 
   )
+  
+#Therefore for representing this kind of data more accurately a heatmap is made, which creates a better visual of understanding the probabilities of first registration regarding the brand.
   
   ggplot(Data_year_prob, aes(x = Year, y = Mark, fill = Prob)) +
   geom_tile() +
   labs(
-    title = "Brand Probability Heatmap",
+    title = "Brand First Registration Probability Heatmap",
     fill = "P(Brand | Year)"
   )
+
+```
+
+The resulting data from the heatmap looks better and can be understood more simply than the first plot. 
+
+To get more in depth I'm also thinking of creating a binomial model for BMW, because of the huge drop of probability, while being the most popular before in terms of first registration in 2026 and we're making it as a case study.
+
+For this a binomial model notation is established: We're expecting a null hypothesis or H~0~to be  
 
 ```{r}
 
