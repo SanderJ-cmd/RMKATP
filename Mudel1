@@ -1,3 +1,4 @@
+---
 title: "RMKData"
 author: "Sander Jegorov"
 date: "2026-04-24"
@@ -5,14 +6,16 @@ output: html_document
 
 ## README
 
-This is an introduction to the analysis of first registration of personal vehicles from Estonia, specifically focusing on the year 2026 in the context of most popular car brands. The dataset is composed of car brands from different manufacturers (BMW,...,Ford) and a number of registrations (1,...,254) corresponding to a year of manufacture (2006,...,2026).
+This is an introduction to the analysis of first registration of personal vehicles from Estonia, specifically focusing on the January of year 2026 in the context of top 10 most popular car brands. The dataset is composed of car brands from different manufacturers (BMW,...,Ford) and a number of registrations (1,...,254) corresponding to a year of first registration (2006,...,2026).
 
-The dataset was taken from the Statistics Estonia website: https://andmed.eesti.ee/datasets/infoleht-%28esmaste-ja-uute-soidukite-statistika%29, where only one sheet of a larger dataset was used to observe a specific proble and older vehicles were disincluded.
+The dataset was taken from the Statistics Estonia website: https://andmed.eesti.ee/datasets/infoleht-%28esmaste-ja-uute-soidukite-statistika%29, where only one sheet "Esm_sõidTOP10" of a larger dataset was used to observe a specific proble and older vehicles were disincluded.
 
-The problem is "How many vehicles are first registered from a period of 20 years and how probable it is to choose to register a certain car brand. In this study we'll be focusing on conditional probability, where probability "P" is dependent on "A" brand given "B" year, therefore the notation is following P(A|B). For the probability model we're trying to do we're using the following equation: P(A|B)=P(A∩B)/P(B), which states that "Probability of brand is dependent on B the year of manufacture." To do this for each year separately would be tedius and require a lot of time so therefore we start with firstly taking all of the registered cars together and making a table with different brands.
+The question for this is the following "How many vehicles are registered in January of 2026 from a year of first registration ranging from 2006-2026 and how probable it is to choose to register a certain car brand." In essence we're trying to see trends, which kind of brands seems to dominate the market. 
+
+In the following analysis we'll be focusing on conditional probability, where probability "P" is dependent on "A" brand (Mark in dataset) given "B" year (year of manufacture). The notation for this sequence is following P(A|B). For the probability model we're trying to do we're using the following equation: P(A|B)=P(A∩B)/P(B), which states that "Probability of brand is dependent on B the year of manufacture when both A and B happen divided by the event of B happening" To do this for each year separately would be tedius and require a lot of time so therefore we start with firstly taking all of the first registered cars together and making a table with different brands.
 
 ```{r}
-#Reading in the document 
+#Reading in the document .
 
 Data <- read.csv(file = "Soidukid.csv")
 
@@ -22,7 +25,7 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 
-#Creating a modified dataset with extending the rows by removing the multiple year columns and transforming them into one column with repetitions of years with pivot_longer. Mutate is used to transform the year into a numeric line of data.
+#Creating a modified dataset with extending the rows by removing the multiple year columns and transforming them into one column with repetitions of years with pivot_longer. Mutate is used to transform the year into a numeric vector.
 
 Data_long <- Data %>%
   pivot_longer(
@@ -34,13 +37,13 @@ Data_long <- Data %>%
     Year = as.numeric(gsub("X", "", Year))
   )
 
-#Probabilities are calculated with P(A)=Number of times A occurs/Number of total outcomes. This means in this context e.g for year 2026 the first registration of BMW P(A)=71/286 P(A)=0.248 where 71 is the count and 286 the sum in the mutate line
+#Probabilities are calculated with P(A)=Number of times A occurs/Number of total outcomes. This means in this context e.g for year 2026 the first registration of BMW P(A)=71/286 P(A)=0.248 where 71 is the count and 286 the sum in the mutate line.
     
 Data_year_prob <- Data_long %>%
   group_by(Year) %>%
   mutate(Prob = Count / sum(Count, na.rm = TRUE))
 
-#Plotting the first data with the probability of first registration over the years 2006-2026.This kind of regular xy time series plot doesn't really feel appropriate in this kind of context but still some trends can already be recognized regarding which brand is most commonly registered in each year.
+#Plotting the first data with the conditional probability of first registration over the years 2006-2026.This kind of regular xy time series plot doesn't really feel appropriate in this kind of context but still some trends can already be recognized regarding which brand is most commonly registered in each year.
 
   ggplot(Data_year_prob, aes(x = Year, y = Prob, color = Mark)) +
   geom_line() +
@@ -63,12 +66,68 @@ Data_year_prob <- Data_long %>%
 
 ```
 
-The resulting data from the heatmap looks better and can be understood more simply than the first plot. 
+## Result1
 
-To get more in depth I'm also thinking of creating a binomial model for BMW, because of the huge drop of probability, while being the most popular before in terms of first registration in 2026 and we're making it as a case study.
+The resulting data from the heatmap looks better and can be understood more simply than the first plot. The verdict here is that BMW has the most registrations overall in January of 2026 regarding cars first registered from 2005-2025 but there is a huge dropoff of vehicles first registered from 2026. This could be due to 2026  most likely because of the the tax of registration being extremely high for BMW due to usually powerful engines and the demand drops along with registration. Similar case could be also made for Mercedez-Benz with most of them also being luxury vehicles and having powerful engines. The opposite is for Škoda, where the probability of registration and therefore the demand increases much more in 2026, most likely because of the price/quality relationship being extremely high for newer Škodas. Similar case could be made for Toyotas, where the ones probability of registration increases tremendously in 2026.
 
-For this a binomial model notation is established: We're expecting a null hypothesis or H~0~to be  
+What I'm also thinking is creating a model to display a similar result but now to see whether the trend of first registration has been overall ascending and favouring the newer cars to be registered more.
+
+For this a linear model is first created where the following notation is established: Count i=β0+β1⋅Year i+εi, where the number of registered cars is equal to and β 1, which is additive change per year  and εi the error term. When creating this we assume that variance of the counts is equal to the total variance, but this data does not have constant variance, which is required for linear model, but we're trying to see the fit to move forward
 
 ```{r}
 
+#Probabilities are calculated for each year and divided by the total number of cars.
+model1 <-  lm(Count ~ Year, data = Data_long)
+summary(model1)
+plot(model1)
 ```
+
+We can see that the this doesn't exactly replicate the situation properly and we need an exponential regression for our problem.
+
+Therefore we're establishing another model to see, a negative binomial here because it allows for variance increase with the mean as Var(Count i)=μi+μi^2/θ. This means, we can use negative binomial to be modelled not with the count but with the expected value of the count. The notation goes like this: where expectation is E[Count i]=μi and therefore the previously established linear model becomes a bit different log(μ i)=β0+β1⋅Year i, where we have also made established a logarithmic relationship where μi=eβ0+β1⋅Year i.  
+
+```{r}
+#Negative binomial with log transform.
+library(MASS)
+model2 <- glm.nb(Count ~ Year, link = "log", data = Data_long)
+
+summary(model2)
+
+plot(model2)
+
+#Seeing which model is more suitable with AIC test, lower value means better suitability and we get a lower value with model 2.
+AIC(model1, model2)
+```
+
+We can see from the results of model 2 plot that the curve fit is better and the comparison of 2 models gives us an advantage with the generalized linear model with negative binomial.
+
+Now we're establishing the groundwork for the final plot, where we establish this notation η^=β0+β1⋅Year where SE(η^).
+
+```{r}
+#Creating data frame for years that space out evenly throughout 100 steps.
+newdata <- data.frame(
+  Year = seq(min(Data_long$Year), max(Data_long$Year), length.out = 100)
+)
+
+#Predict on link scale (non-linear relationship between expected value and response variable) with standard error.
+pred <- predict(model2, newdata, type = "link", se.fit = TRUE)
+
+#Conversion to exponents and back to response scale is done because η=log(μ) is transformed to μ=eη 
+fit <- exp(pred$fit)
+upper <- exp(pred$fit + 1.96 * pred$se.fit)
+lower <- exp(pred$fit - 1.96 * pred$se.fit)
+
+#Plotting the data with curve fit following the equation μi=e^β0+e^β1*Year and dashed lines as error bars of it.
+plot(Data_long$Year, Data_long$Count,
+     pch = 16, col = rgb(0,0,0,0.4),
+     xlab = "Year", ylab = "Count")
+
+lines(newdata$Year, fit, lwd = 2)
+lines(newdata$Year, upper, lty = 2)
+lines(newdata$Year, lower, lty = 2)
+
+```
+
+## Result2
+
+What we have modelled is an overall exponential growth of the registering of newer vehicles in 2026. Whilst 2026 has the most outliers, the data still represents that there is an ascending trend in registration of newer cars, which may mean that people prefer newer vehicles to the older ones due to need for higher maintenance.
